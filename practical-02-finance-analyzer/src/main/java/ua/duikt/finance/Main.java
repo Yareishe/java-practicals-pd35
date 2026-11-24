@@ -1,0 +1,7 @@
+package ua.duikt.finance;
+import java.io.IOException;import java.net.URI;import java.nio.file.Path;import java.util.List;
+public final class Main {
+ private static final URI DATA_URL=URI.create("https://informer.com.ua/dut/java/pr2.csv");private static final Path SAMPLE=Path.of("src","main","resources","transactions_source.csv");private Main(){}
+ public static void main(String[] args){var reader=new TransactionCsvReader();List<Transaction> rows;try{if(args.length>0&&args[0].startsWith("https://"))rows=reader.readTransactions(URI.create(args[0]));else if(args.length>0)rows=reader.readTransactions(Path.of(args[0]));else{try{rows=reader.readTransactions(DATA_URL);}catch(IOException e){System.err.println("Не вдалося завантажити навчальний CSV; використовую локальний приклад: "+e.getMessage());rows=reader.readTransactions(SAMPLE);}}if(rows.isEmpty()){System.err.println("CSV не містить транзакцій.");return;}runReports(rows);}catch(IOException|IllegalArgumentException e){System.err.println("Помилка читання даних: "+e.getMessage());}}
+ private static void runReports(List<Transaction> rows){var a=new TransactionAnalyzer(rows);var r=new TransactionReportGenerator();r.printBalanceReport(a.calculateTotalBalance());r.printTransactionsCountByMonth("01-2024",a.countTransactionsByMonth("01-2024"));r.printLargestAndSmallest("01-2024",a.findLargestExpense("01-2024"),a.findSmallestExpense("01-2024"));r.printTopExpensesReport(a.findTopExpenses());r.printExpenseBreakdown(a.expensesByCategory(),a.expensesByMonth());}
+}
